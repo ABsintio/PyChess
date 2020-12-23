@@ -30,13 +30,13 @@ class PyChessServer:
             socket_thread = threading.Thread(target=self.rcv_message_from_client, args=[client_socket, client_address])
             socket_thread.daemon = True
             socket_thread.start()
-            socket_thread.join()
-            if not socket_thread.is_alive() and self.CONNECTED_HOST == 0:
-                print("Chiusura della socket ... ")
-                self.SOCKET.close()
-                sys.exit(0)
 
 
 if __name__ == "__main__":
-    server = PyChessServer("192.168.1.51", 9091, 1000)
-    server.accept_connections()
+    try:
+        server = PyChessServer("192.168.1.51", 9091, 1000)
+        server.accept_connections()
+    except socket.error as e:
+        print("Exiting ...")
+    except KeyboardInterrupt:
+        print("Exiting ...")
