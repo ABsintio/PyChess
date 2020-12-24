@@ -48,6 +48,7 @@ class PyChessServer:
         self.virtual_rooms = dict()
         self.virtual_rooms_id = []
         self.virtual_rooms_per_client = dict()
+        self.virtual_rooms_idx = 0
         self.start()
     
     def start(self):
@@ -62,24 +63,31 @@ class PyChessServer:
             self.connection_pool.pop(client_name)
         except KeyError:
             self.virtual_rooms.pop(self.virtual_rooms_per_client[client_name])
+            self.virtual_rooms_idx -= 2
 
     def accept_connections(self):
-        while True:
-            client_socket, client_address = self.SOCKET.accept()
-            client_name = client_socket.recv(4096).decode("utf-8")
-            self.connection_pool[client_name] = (client_socket, client_address)
-            self.connected_host += 1
-            self.dispatch_connection()
-            socket_thread = threading.Thread(target=self.rcv_message_from_client, 
-                                             args=[client_name, client_socket, client_address])
-            socket_thread.daemon = True
-            socket_thread.start()
-    
+        try:
+            while True:
+                client_socket, client_address = self.SOCKET.accept()
+                client_name = client_socket.recv(4096).decode("utf-8")
+                self.connection_pool[client_name] = (client_socket, client_address)
+                self.connected_host += 1
+                self.dispatch_connection()
+                socket_thread = threading.Thread(target=self.rcv_message_from_client, 
+                                                args=[client_name, client_socket, client_address])
+                socket_thread.daemon = True
+                socket_thread.start()
+        except Exception as e:
+            print(e)
+            self.SOCKET.close()
+
     def dispatch_connection(self):
         connected_host_list = list(self.connection_pool.keys())
-        for idx in range(self.connected_host):
+        print(self.connected_host)
+        for idx in range(self.virtual_rooms_idx, self.connected_host):
             if (idx + 1) % 2 == 0 and idx > 0:
-                client_name1, client_name2 = connected_host_list[idx - 1:idx + 1]
+                print(idx - 1, idx + 1)
+                client_name1, client_name2 = connected_host_list[idx - 1 - self.virtual_rooms_idx:idx + 1 - self.virtual_rooms_idx]
                 client_socket1 = self.connection_pool[client_name1]
                 client_socket2 = self.connection_pool[client_name2]
                 self.connection_pool.pop(client_name1)
@@ -98,13 +106,14 @@ class PyChessServer:
                 self.virtual_rooms_per_client[client_name1] = virtual_room_id
                 self.virtual_rooms_per_client[client_name2] = virtual_room_id
                 print(virtual_room)
+                self.virtual_rooms_idx += 2
 
 
 if __name__ == "__main__":
     try:
-        server = PyChessServer("192.168.1.184", 9091, 1000)
+        server = PyChessServer("192.168.1.184", 9090, 1000)
         server.accept_connections()
     except socket.error as e:
-        print("Exiting ...")
+        print(e)
     except KeyboardInterrupt:
         print("Exiting ...")
