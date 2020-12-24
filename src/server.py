@@ -32,7 +32,7 @@ class VirtualRoom:
         return random_id
 
     def __str__(self):
-        return "VirtualRoom(" + "\n".join([f"{k}:{v}" for k, v in self.__dict__.items()] + "\n)")
+        return "VirtualRoom(" + "\n".join([f"{k}:{v}" for k, v in self.__dict__.items()]) + "\n)"
 
 
 class PyChessServer:
