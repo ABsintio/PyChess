@@ -19,7 +19,10 @@ class PyChessClient:
             print(e)
     
     def send_msg(self):
-        pass
+        while (msg := input(">>> ") != "quit"):
+            self.SOCKET.send(msg.encode("utf-8"))
+        self.SOCKET.close()
 
 client = PyChessClient("client1", "192.168.1.184", 9091)
 client.connect_to_server()
+client.send_msg()
