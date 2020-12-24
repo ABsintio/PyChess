@@ -75,7 +75,7 @@ class PyChessServer:
         connected_host_list = list(self.connection_pool.keys())
         for idx in range(self.connected_host):
             if (idx + 1) % 2 == 0 and idx > 0:
-                client_name1, client_name2 = connected_host_list[idx - 2:idx]
+                client_name1, client_name2 = connected_host_list[idx - 1:idx + 1]
                 client_socket1 = self.connection_pool[client_name1]
                 client_socket2 = self.connection_pool[client_name2]
                 self.connection_pool.pop(client_name1)
