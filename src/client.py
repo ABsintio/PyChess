@@ -25,6 +25,7 @@ class PyChessClient:
                 break
             self.SOCKET.send(msg.encode("utf-8"))
         self.SOCKET.close()
+    
 
 client = PyChessClient(sys.argv[1], "192.168.1.184", 9091)
 client.connect_to_server()

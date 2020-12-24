@@ -5,6 +5,9 @@ import random
 
 
 class VirtualRoom:
+
+    VIRTUAL_ROOM_ID_SIZE = 25
+
     def __init__(self, identificativo, client1, client2, server):
         self.identificativo = identificativo
         self.white = client1
@@ -28,6 +31,9 @@ class VirtualRoom:
         
         return random_id
 
+    def __str__(self):
+        return "VirtualRoom(" + "\n".join([f"{k}:{v}" for k, v in self.__dict__.items()] + "\n)")
+
 
 class PyChessServer:
 
@@ -39,6 +45,8 @@ class PyChessServer:
         self.max_conn_ref = max_connession_refused
         self.connected_host = 0
         self.connection_pool = dict()
+        self.virtual_rooms = dict()
+        self.virtual_rooms_id = []
         self.start()
     
     def start(self):
@@ -56,12 +64,33 @@ class PyChessServer:
             client_socket, client_address = self.SOCKET.accept()
             client_name = client_socket.recv(4096).decode("utf-8")
             self.connection_pool[client_name] = (client_socket, client_address)
-            print(self.connection_pool)
             self.connected_host += 1
             socket_thread = threading.Thread(target=self.rcv_message_from_client, 
                                              args=[client_name, client_socket, client_address])
             socket_thread.daemon = True
             socket_thread.start()
+    
+    def dispatch_connection(self):
+        connected_host_list = list(self.connection_pool.keys())
+        for idx in range(self.connected_host):
+            if idx % 2 == 0 and idx > 0:
+                client_name1, client_name2 = connected_host_list[idx - 2:idx]
+                client_socket1 = self.connection_pool[client_name1]
+                client_socket2 = self.connection_pool[client_name2]
+                self.connection_pool.pop(client_name1)
+                self.connection_pool.pop(client_name2)
+                virtual_room_id = VirtualRoom.generate_random_id(
+                    VirtualRoom.VIRTUAL_ROOM_ID_SIZE, self.virtual_rooms_id
+                )
+                self.virtual_rooms_id.append(virtual_room_id)
+                virtual_room = VirtualRoom(
+                    virtual_room_id,
+                    (client_name1, client_socket1),
+                    (client_name2, client_socket2),
+                    self.SOCKET
+                )
+                self.virtual_rooms[virtual_room_id] = virtual_room
+                print(virtual_room)
 
 
 if __name__ == "__main__":
