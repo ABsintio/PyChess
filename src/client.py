@@ -19,7 +19,7 @@ class PyChessClient:
             print(e)
     
     def send_msg(self):
-        while (msg := input(">>> ") != "quit"):
+        while (msg := (input(">>> ")) != "quit"):
             self.SOCKET.send(msg.encode("utf-8"))
         self.SOCKET.close()
 
