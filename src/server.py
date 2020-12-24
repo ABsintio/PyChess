@@ -32,7 +32,7 @@ class VirtualRoom:
         return random_id
 
     def __str__(self):
-        return "VirtualRoom(" + "\n".join([f"{k}:{v}" for k, v in self.__dict__.items()]) + "\n)"
+        return "VirtualRoom(\n" + "\n".join([f"{k}:{v}" for k, v in self.__dict__.items()]) + "\n)"
 
 
 class PyChessServer:
@@ -47,6 +47,7 @@ class PyChessServer:
         self.connection_pool = dict()
         self.virtual_rooms = dict()
         self.virtual_rooms_id = []
+        self.virtual_rooms_per_client = dict()
         self.start()
     
     def start(self):
@@ -57,7 +58,10 @@ class PyChessServer:
         while (msg := connection_obj.recv(4096).decode("utf-8")):
             print(f"Messaggio da {client_address} -> {msg}")
         self.connected_host -= 1
-        self.connection_pool.pop(client_name)
+        try:
+            self.connection_pool.pop(client_name)
+        except KeyError:
+            self.virtual_rooms.pop(self.virtual_rooms_per_client[client_name])
 
     def accept_connections(self):
         while True:
@@ -91,6 +95,8 @@ class PyChessServer:
                     self.SOCKET
                 )
                 self.virtual_rooms[virtual_room_id] = virtual_room
+                self.virtual_rooms_per_client[client_name1] = virtual_room_id
+                self.virtual_rooms_per_client[client_name2] = virtual_room_id
                 print(virtual_room)
 
 
