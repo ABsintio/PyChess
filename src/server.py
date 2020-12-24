@@ -65,6 +65,7 @@ class PyChessServer:
             client_name = client_socket.recv(4096).decode("utf-8")
             self.connection_pool[client_name] = (client_socket, client_address)
             self.connected_host += 1
+            self.dispatch_connection()
             socket_thread = threading.Thread(target=self.rcv_message_from_client, 
                                              args=[client_name, client_socket, client_address])
             socket_thread.daemon = True
