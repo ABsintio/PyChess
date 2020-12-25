@@ -1,5 +1,6 @@
 import socket
 import sys
+import threading
 
 
 class PyChessClient:
@@ -10,6 +11,7 @@ class PyChessClient:
         self.client_name = client_name
         self.server_ip = server_ip
         self.server_port = server_port
+        self.socket_closed = False
     
     def connect_to_server(self):
         try:
@@ -25,8 +27,23 @@ class PyChessClient:
                 break
             self.SOCKET.send(msg.encode("utf-8"))
         self.SOCKET.close()
+        self.socket_closed = True
+
+    def rcv_msg(self):
+        while True:
+            try:
+                rcv_msg = self.SOCKET.recv(4096).decode("utf-8")
+                print(rcv_msg)
+            except OSError:
+                return
+
+    def start_listen_and_receive(self):
+        t1 = threading.Thread(target=self.send_msg)
+        t2 = threading.Thread(target=self.rcv_msg)
+        t1.start()
+        t2.start()
     
 
-client = PyChessClient(sys.argv[1], "192.168.1.184", 9090)
+client = PyChessClient(sys.argv[1], "192.168.1.184", 9091)
 client.connect_to_server()
-client.send_msg()
+client.start_listen_and_receive()

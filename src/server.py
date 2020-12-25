@@ -4,15 +4,18 @@ import sys
 import random
 
 
-class VirtualRoom:
+class VirtualRoom(threading.Thread):
 
     VIRTUAL_ROOM_ID_SIZE = 25
 
     def __init__(self, identificativo, client1, client2, server):
+        super().__init__()
         self.identificativo = identificativo
-        self.white = client1
-        self.black = client2
+        self.white, self.white_socket = client1
+        self.black, self.black_socket = client2
         self.room_proprietary = server
+        self.accept_black = False 
+        self.accept_white = True
     
     @staticmethod
     def generate_random_id(n_size, taken_id):
@@ -30,6 +33,38 @@ class VirtualRoom:
             return VirtualRoom.generate_random_id(n_size, taken_id)
         
         return random_id
+
+    def accept_white_sendto_black(self):
+        msg = self.white_socket[0].recv(4096).decode("utf-8")
+        if msg == "": return
+        sendto_msg = f"Messaggio dal giocatore bianco {self.white}: {msg}"
+        print(sendto_msg)
+        if not self.black_socket[0]._closed:
+            self.black_socket[0].send(sendto_msg.encode("utf-8"))
+        return 0
+
+    def accept_black_sendto_white(self):
+        msg = self.black_socket[0].recv(4096).decode("utf-8")
+        if msg == "": return
+        sendto_msg = f"Messaggio dal giocatore nero {self.black}: {msg}"
+        print(sendto_msg)
+        if not self.white_socket[0]._closed:
+            self.white_socket[0].send(sendto_msg.encode("utf-8"))
+        return 0
+
+    def rcv_clients_msg(self):
+        while True:
+            if self.accept_white:
+                exit_code = self.accept_white_sendto_black()
+                if exit_code is None: return
+            if self.accept_black:
+                exit_code = self.accept_black_sendto_white()
+                if exit_code is None: return
+            self.accept_white = not self.accept_white
+            self.accept_black = not self.accept_black
+
+    def run(self):
+        self.rcv_clients_msg()
 
     def __str__(self):
         return "VirtualRoom(\n" + "\n".join([f"{k}:{v}" for k, v in self.__dict__.items()]) + "\n)"
@@ -55,15 +90,12 @@ class PyChessServer:
         self.SOCKET.bind((self.ip_address, self.port))
         self.SOCKET.listen(self.max_conn_ref)
 
-    def rcv_message_from_client(self, client_name, connection_obj, client_address):
-        while (msg := connection_obj.recv(4096).decode("utf-8")):
-            print(f"Messaggio da {client_address} -> {msg}")
-        self.connected_host -= 1
-        try:
-            self.connection_pool.pop(client_name)
-        except KeyError:
-            self.virtual_rooms.pop(self.virtual_rooms_per_client[client_name])
-            self.virtual_rooms_idx -= 2
+    def check_virtual_rooms_state(self):
+        off_vr = []
+        for k, v in self.virtual_rooms.items():
+            if not v.is_alive():
+                off_vr.append(k)
+        for vr in off_vr: self.virtual_rooms.pop(vr)
 
     def accept_connections(self):
         try:
@@ -72,21 +104,21 @@ class PyChessServer:
                 client_name = client_socket.recv(4096).decode("utf-8")
                 self.connection_pool[client_name] = (client_socket, client_address)
                 self.connected_host += 1
-                self.dispatch_connection()
-                socket_thread = threading.Thread(target=self.rcv_message_from_client, 
-                                                args=[client_name, client_socket, client_address])
-                socket_thread.daemon = True
-                socket_thread.start()
+                new_virtual_room = self.dispatch_connection()
+                if isinstance(new_virtual_room, VirtualRoom):
+                    new_virtual_room.daemon = True
+                    new_virtual_room.start()
+                self.check_virtual_rooms_state()
+
         except Exception as e:
             print(e)
             self.SOCKET.close()
 
     def dispatch_connection(self):
         connected_host_list = list(self.connection_pool.keys())
-        print(self.connected_host)
+        virtual_room = None
         for idx in range(self.virtual_rooms_idx, self.connected_host):
             if (idx + 1) % 2 == 0 and idx > 0:
-                print(idx - 1, idx + 1)
                 client_name1, client_name2 = connected_host_list[idx - 1 - self.virtual_rooms_idx:idx + 1 - self.virtual_rooms_idx]
                 client_socket1 = self.connection_pool[client_name1]
                 client_socket2 = self.connection_pool[client_name2]
@@ -108,10 +140,12 @@ class PyChessServer:
                 print(virtual_room)
                 self.virtual_rooms_idx += 2
 
+        return virtual_room
+
 
 if __name__ == "__main__":
     try:
-        server = PyChessServer("192.168.1.184", 9090, 1000)
+        server = PyChessServer("192.168.1.184", 9091, 1000)
         server.accept_connections()
     except socket.error as e:
         print(e)
