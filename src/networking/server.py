@@ -2,6 +2,21 @@ import socket
 import threading
 import sys
 import random
+import coloredlogs
+import argparse
+import yaml
+import logging
+import logging.config
+
+
+argument_parser = argparse.ArgumentParser()
+argument_parser.add_argument("-l", "--logger", help="Path del file di configurazione del logger", required=True)
+args = argument_parser.parse_args()
+config_log = args.logger
+
+logging.config.dictConfig(yaml.load(open(config_log, mode="r"), Loader=yaml.FullLoader))
+logger = logging.getLogger("root")
+coloredlogs.install(level="DEBUG", logger=logger)
 
 
 class VirtualRoom(threading.Thread):
@@ -89,6 +104,7 @@ class PyChessServer:
     def start(self):
         self.SOCKET.bind((self.ip_address, self.port))
         self.SOCKET.listen(self.max_conn_ref)
+        logger.debug(f"[SERVER] Il server è in ascolto su ({self.ip_address}, {self.port})")
 
     def check_virtual_rooms_state(self):
         off_vr = []
@@ -145,7 +161,7 @@ class PyChessServer:
 
 if __name__ == "__main__":
     try:
-        server = PyChessServer("192.168.1.184", 9091, 1000)
+        server = PyChessServer("192.168.1.184", 9090, 1000)
         server.accept_connections()
     except socket.error as e:
         print(e)
