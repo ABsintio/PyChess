@@ -132,7 +132,7 @@ class PyChessServer:
                     new_virtual_room.start()
                 self.check_virtual_rooms_state()
 
-        except Exception as e:
+        except Exception:
             self.SOCKET.close() # Chiudo la socket del server
             # disconnetto anche tutte quelle dei client
             for _, client_socket in self.connection_pool.items():
