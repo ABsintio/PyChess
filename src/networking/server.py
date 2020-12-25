@@ -82,7 +82,7 @@ class VirtualRoom(threading.Thread):
         self.rcv_clients_msg()
 
     def __str__(self):
-        return "VirtualRoom(\n" + "\n".join([f"{k}:{v}" for k, v in self.__dict__.items()]) + "\n)"
+        return "VirtualRoom(\n" + "\n".join([f"    {k}:{v}" for k, v in self.__dict__.items()]) + "\n)"
 
 
 class PyChessServer:
@@ -111,24 +111,36 @@ class PyChessServer:
         for k, v in self.virtual_rooms.items():
             if not v.is_alive():
                 off_vr.append(k)
-        for vr in off_vr: self.virtual_rooms.pop(vr)
+        for vr in off_vr: 
+            virtual_r = self.virtual_rooms[vr]
+            virtual_r.white_socket[0].closed()
+            virtual_r.black_socket[0].closed()
+            self.virtual_rooms.pop(vr)
 
     def accept_connections(self):
         try:
             while True:
                 client_socket, client_address = self.SOCKET.accept()
                 client_name = client_socket.recv(4096).decode("utf-8")
+                logger.debug(f"[SERVER] Si è connesso un nuovo client ({client_address}, {client_name})")
                 self.connection_pool[client_name] = (client_socket, client_address)
                 self.connected_host += 1
                 new_virtual_room = self.dispatch_connection()
                 if isinstance(new_virtual_room, VirtualRoom):
+                    logger.debug(f"[SERVER] Nuova stanza virtuale creata:\n{new_virtual_room}")
                     new_virtual_room.daemon = True
                     new_virtual_room.start()
                 self.check_virtual_rooms_state()
 
         except Exception as e:
-            print(e)
-            self.SOCKET.close()
+            self.SOCKET.close() # Chiudo la socket del server
+            # disconnetto anche tutte quelle dei client
+            for _, client_socket in self.connection_pool.items():
+                client_socket.shutdown()
+            # Alcuni client possono essere nella stanza virtuale, allora devo scollegare anche quelli
+            for _, vr in self.virtual_rooms.items():
+                vr.white_socket[0].close()
+                vr.black_socket[0].close()
 
     def dispatch_connection(self):
         connected_host_list = list(self.connection_pool.keys())
@@ -153,17 +165,11 @@ class PyChessServer:
                 self.virtual_rooms[virtual_room_id] = virtual_room
                 self.virtual_rooms_per_client[client_name1] = virtual_room_id
                 self.virtual_rooms_per_client[client_name2] = virtual_room_id
-                print(virtual_room)
                 self.virtual_rooms_idx += 2
 
         return virtual_room
 
 
 if __name__ == "__main__":
-    try:
-        server = PyChessServer("192.168.1.184", 9090, 1000)
-        server.accept_connections()
-    except socket.error as e:
-        print(e)
-    except KeyboardInterrupt:
-        print("Exiting ...")
+    server = PyChessServer("192.168.1.184", 9090, 1000)
+    server.accept_connections()

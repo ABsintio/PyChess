@@ -20,28 +20,37 @@ class PyChessClient:
             print(e)
     
     def send_msg(self):
-        while True:
-            msg = input(">>> ")
-            if msg == "quit":
-                print(msg.__repr__())
-                break
-            self.SOCKET.send(msg.encode("utf-8"))
-        self.SOCKET.close()
+        try:
+            while True:
+                if self.SOCKET._closed: break
+                msg = input(">>> ")
+                if msg == "quit" or not msg: break
+                self.SOCKET.send(msg.encode("utf-8"))
+        except Exception:
+            pass
+        finally:
+            if not self.SOCKET._closed: self.SOCKET.close()
 
     def rcv_msg(self):
-        while True:
-            try:
+        try:
+            while True:
+                if self.SOCKET._closed: break
                 rcv_msg = self.SOCKET.recv(4096).decode("utf-8")
-                print("\n" + rcv_msg + "\n")
-            except OSError:
-                return
+                if not rcv_msg: break
+                print("\n" + rcv_msg)
+                print(">>> ", end="")
+        except Exception:
+            pass
+        finally:
+            if not self.SOCKET._closed: self.SOCKET.close()
 
     def start_listen_and_receive(self):
-        t1 = threading.Thread(target=self.send_msg)
-        t2 = threading.Thread(target=self.rcv_msg)
-        t1.start()
-        t2.start()
-    
+        self.t1 = threading.Thread(target=self.send_msg)
+        self.t2 = threading.Thread(target=self.rcv_msg)
+        self.t1.start()
+        self.t2.start()
+        self.t1.join()
+        self.t2.join()
 
 client = PyChessClient(sys.argv[1], "192.168.1.184", 9090)
 client.connect_to_server()
