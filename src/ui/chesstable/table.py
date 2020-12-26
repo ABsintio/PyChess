@@ -68,10 +68,13 @@ class ChessTable(tk.Tk):
                 if (location_x, location_y) in self.PIECES_XY_DICT[piece]:
                     img_obj = Image.open(img_name)
                     img = ImageTk.PhotoImage(image=img_obj.resize((100, 100)))
-                    canvas = tk.Canvas(master=frame, width=100, height=100)
+                    canvas = tk.Canvas(
+                        master=frame, 
+                        width=100, height=100,
+                        bg=frame.config()['background'][-1])
                     canvas.create_image(50, 50, image=img, anchor=CENTER)
                     canvas.image = img
-                    canvas.pack(fill=tk.BOTH)
+                    canvas.pack(fill=tk.BOTH, anchor=CENTER)
                     frame.update()
 
 
