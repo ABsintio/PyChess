@@ -55,7 +55,7 @@ class ChessTable(tk.Tk):
             frame = tk.Frame(
                 master=self,
                 relief=tk.RAISED,
-                bg="gray49" if (c + r) % 2 != 0 else "white"
+                bg="gray49" if (c + r) % 2 != 0 else "white",
             )
             frame.grid(column=c,row=r,sticky="nsew")
             self.frame_houses.append(frame)
@@ -66,16 +66,15 @@ class ChessTable(tk.Tk):
             location_y = frame.grid_info()['row']
             for piece, img_name in self.PIECES_IMG_DICT.items():
                 if (location_x, location_y) in self.PIECES_XY_DICT[piece]:
+                    frame.update()
                     img_obj = Image.open(img_name)
                     img = ImageTk.PhotoImage(image=img_obj.resize((100, 100)))
-                    canvas = tk.Canvas(
-                        master=frame, 
-                        width=100, height=100,
-                        bg=frame.config()['background'][-1])
-                    canvas.create_image(50, 50, image=img, anchor=CENTER)
-                    canvas.image = img
-                    canvas.pack(fill=tk.BOTH, anchor=CENTER)
-                    frame.update()
+                    piece_label = tk.Label(
+                        master=frame,
+                        bg=frame.config()['background'][-1],
+                        image=img)
+                    piece_label.image = img
+                    piece_label.pack(fill=tk.BOTH)
 
 
 chess_table = ChessTable()
