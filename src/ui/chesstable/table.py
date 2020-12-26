@@ -40,6 +40,7 @@ class ChessTable(tk.Tk):
         super().__init__()
         self.frame_houses = []
         self.build()
+        self.title = "PyChess"
 
     def build(self):
         self.create_grid()
