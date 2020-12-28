@@ -53,6 +53,7 @@ class ChessTable(tk.Frame):
 
     myTurn = False
     hold_piece = ()
+    ALG_NAME = dict()
 
     def __init__(self, master):
         super().__init__(master=master)
@@ -61,7 +62,27 @@ class ChessTable(tk.Frame):
         self.positions = dict()
         self.labels_frame = []
 
-    # TODO: riscrivere in modo statico le funzioni di conversione algebric2tuple e tuple2algebric
+        # definisco un dizionare speculare a PIECES_NAME con la 
+        # sola differenza che prenderà solo quelli dello stesso
+        # colore del giocatore.
+        self.alg_name = {v:k for k, v in self.PIECES_NAMES.items()}
+        self.setup_alg_name()
+
+    def setup_alg_name(self):
+        self.ALG_NAME = self.alg_name
+
+    @staticmethod
+    def tuple2algebric(x, y, piece_name):
+        piece_name = ChessTable.PIECES_NAMES[piece_name] 
+        alpha_pos = chr(97 + x)
+        return f"{piece_name}{alpha_pos}{y + 1}"
+    
+    @staticmethod
+    def algebric2tuple(alg_pos):
+        piece_name = ChessTable.ALG_NAME[alg_pos[0]]
+        x_pos = ord(alg_pos[1]) - 97
+        y_pos = int(alg_pos[2]) - 1
+        return (piece_name, x_pos, y_pos)
 
     @staticmethod
     def get_position_from_labels(lable, lables):
@@ -73,7 +94,7 @@ class ChessTable(tk.Frame):
         return list(filter(lambda q: q.grid_info()['column'] == x and q.grid_info()['row'] == y, frame_houses))[-1]
 
     @classmethod
-    def highlight_label_callback(cls, event, frame, lbls, piece):
+    def highlight_label_callback(cls, event, frame, lbls, piece, piece_pos_name):
         cln = frame.grid_info()['column']
         row = frame.grid_info()['row']
         label_wdg = event.widget
@@ -85,13 +106,13 @@ class ChessTable(tk.Frame):
             if lbl.config()['background'][-1] == "lemon chiffon" and lbl != label_wdg:
                 lbl_color = "white" if (x + y) % 2 == 0 else "gray49"
                 lbl.config(bg=lbl_color)
-        cls.hold_piece = (label_wdg, frame, piece, cln, row)
+        cls.hold_piece = (label_wdg, frame, piece, piece_pos_name, cln, row)
         if color in ['white', 'gray49']: cls.hold_piece = ()
 
     @classmethod
-    def move_piece_callback(cls, event, lables, frames_houses):
+    def move_piece_callback(cls, event, lables, frames_houses, positions):
         if cls.hold_piece != ():
-            lbl, frame, piece, cln, row = cls.hold_piece
+            lbl, frame, piece, piece_pos_name, cln, row = cls.hold_piece
             frame_to_color = 'white' if (cln + row) % 2 == 0 else "grey49"
             if isinstance(event.widget, tk.Frame):
                 c = event.widget.grid_info()['column']
@@ -103,24 +124,32 @@ class ChessTable(tk.Frame):
             
             frame_from_color = 'white' if (c + r) % 2 == 0 else "grey49"
             frame_to = cls.get_frame_from_position(pos_x, pos_y, frames_houses) if isinstance(event.widget, tk.Label) else event.widget
-            if cls.check_move_white(piece, cln, row, c, r):
-                # TODO: inserire un controllo sulla mossa di mangiare del pedone
-                # TODO: inserire aggiornamento del dizionario delle posizioni dei pezzi.
+            if cls.check_move(piece, cln, row, c, r) or ("pawn" in piece and cls.isLegal_pawn_diagonal_move(cln, row, c, r, event.widget)):
                 if isinstance(event.widget, tk.Label):
-                    if "pawn" in piece: return
+                    if "pawn" in piece and not cls.isLegal_pawn_diagonal_move(cln, row, c, r, event.widget): return
                     lbl_to.destroy()
                     lables.remove((lbl_to, pos_x, pos_y))
                 frame_to.grid(column=cln,row=row,sticky="nsew")
                 frame_to.config(bg=frame_to_color)
                 frame.grid(column=c,row=r,sticky="nsew")
                 lbl.config(bg=frame_from_color)
+                index_of = lables.index((lbl, cln, row))
+                lables[index_of] = (lbl, c, r)
                 cls.hold_piece = ()
+                positions[piece_pos_name] = cls.tuple2algebric(c, r, piece)
                 return
 
     @staticmethod
-    def isLegal_pawn_move_white(x_from, y_from, x_to, y_to):
+    def isLegal_pawn_move(x_from, y_from, x_to, y_to):
         return (x_from, y_from - 1) == (x_to, y_to) or \
                (y_from == 6 and ((x_from, y_from - 2) == (x_to, y_to)))
+
+    @staticmethod
+    def isLegal_pawn_diagonal_move(x_from, y_from, x_to, y_to, diag_widget):
+        return isinstance(diag_widget, tk.Label) and (
+            (x_from + 1, y_from - 1) == (x_to, y_to) or \
+            (x_from - 1, y_from - 1) == (x_to, y_to)
+        )
     
     @staticmethod
     def isLegal_king_move(x_from, y_from, x_to, y_to):
@@ -170,14 +199,20 @@ class ChessTable(tk.Frame):
                ChessTable.isLegal_bishop_move(x_from, y_from, x_to, y_to)
 
     @staticmethod
-    def check_move_white(piece, x_from, y_from, x_to, y_to):
+    def check_move(piece, x_from, y_from, x_to, y_to):
         piece_check_functions = {
             "white_king"   : ChessTable.isLegal_king_move,
             "white_queen"  : ChessTable.isLegal_queen_move,
             "white_tower"  : ChessTable.isLegal_tower_move,
             "white_bishop" : ChessTable.isLegal_bishop_move,
             "white_knight" : ChessTable.isLegal_knight_move,
-            "white_pawn"   : ChessTable.isLegal_pawn_move_white
+            "white_pawn"   : ChessTable.isLegal_pawn_move,
+            "black_king"   : ChessTable.isLegal_king_move,
+            "black_queen"  : ChessTable.isLegal_queen_move,
+            "black_tower"  : ChessTable.isLegal_tower_move,
+            "black_bishop" : ChessTable.isLegal_bishop_move,
+            "black_knight" : ChessTable.isLegal_knight_move,
+            "black_pawn"   : ChessTable.isLegal_pawn_move
         }
         return piece_check_functions[piece](x_from, y_from, x_to, y_to)
 
@@ -188,28 +223,12 @@ class WhiteChessTable(ChessTable):
         super().__init__(master=master)
         self.color_player = "white"
         self.pack(fill=tk.BOTH, side=tk.LEFT)
-        
-        # definisco un dizionare speculare a PIECES_NAME con la 
-        # sola differenza che prenderà solo quelli dello stesso
-        # colore del giocatore.
-        self.alg_name = {v:k for k, v in self.PIECES_NAMES.items() if self.color_player in k}
         self.build()
 
     def build(self):
         self.create_grid()
         self.place_pieces()
         self.create_event_frame()
-    
-    def tuple2algebric(self, x, y, piece_name):
-        piece_name = self.PIECES_NAMES[piece_name] 
-        alpha_pos = chr(97 + x)
-        return f"{piece_name}{alpha_pos}{y + 1}"
-
-    def algebric2tuple(self, alg_pos):
-        piece_name = self.alg_name[alg_pos[0]]
-        x_pos = ord(alg_pos[1]) - 97
-        y_pos = int(alg_pos[2]) - 1
-        return (piece_name, x_pos, y_pos)
     
     def create_grid(self):
         cartesian_product = [(x, y) for x in range(self.COLUMN) for y in range(self.ROW)]
@@ -226,11 +245,13 @@ class WhiteChessTable(ChessTable):
             self.frame_houses.append(frame)
         
     def place_pieces(self):
+        occurrence_piece = {k:0 for k in self.PIECES_NAMES.keys()}
         for frame in self.frame_houses:
             location_x = frame.grid_info()['column']
             location_y = frame.grid_info()['row']
             for piece, img_name in self.PIECES_IMG_DICT.items():
                 if (location_x, location_y) in self.PIECES_XY_DICT[piece]:
+                    occ = occurrence_piece[piece]
                     #frame.update()
                     img_obj = Image.open(img_name)
                     img = ImageTk.PhotoImage(image=img_obj.resize((90, 90)))
@@ -240,10 +261,11 @@ class WhiteChessTable(ChessTable):
                         image=img)
                     piece_label.image = img
                     piece_label.pack(fill=tk.BOTH, expand=True)
-                    self.positions[piece] = self.tuple2algebric(
+                    self.positions[f"{piece}_{occ}"] = self.tuple2algebric(
                         location_x, location_y, 
                         piece
                     )
+                    occurrence_piece[piece] += 1
                     self.labels_frame.append((piece_label, location_x, location_y))
                     if self.color_player in piece:
                         piece_label.bind(
@@ -251,14 +273,16 @@ class WhiteChessTable(ChessTable):
                             partial(ChessTable.highlight_label_callback, 
                                     frame=frame, 
                                     lbls=self.labels_frame,
-                                    piece=piece
+                                    piece=piece,
+                                    piece_pos_name=f"{piece}_{occ}"
                                 )
                         )
                     else:
                         piece_label.bind('<ButtonRelease-1>', partial(
                             ChessTable.move_piece_callback,
                             lables=self.labels_frame,
-                            frames_houses=self.frame_houses
+                            frames_houses=self.frame_houses,
+                            positions=self.positions
                             ))
 
     def create_event_frame(self):
@@ -267,7 +291,8 @@ class WhiteChessTable(ChessTable):
             frame.bind("<ButtonRelease-1>", partial(
                 ChessTable.move_piece_callback,
                 lables=self.labels_frame,
-                frames_houses=self.frame_houses
+                frames_houses=self.frame_houses,
+                positions=self.positions
                 ))
 
 
