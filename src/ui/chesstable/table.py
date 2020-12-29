@@ -185,24 +185,27 @@ class ChessTable(tk.Frame):
     
     @staticmethod
     def isLegal_tower_move(x_from, y_from, x_to, y_to, positions, alg_name):
-        #TODO: modificare
         other_piece_positions = [ChessTable.algebric2tuple(x, alg_name) for x in positions.values()]
         current_trajectory = []
-        trajectory_V_to_y_from = [(x_from, j) for j in range(y_from)]
-        trajectory_H_to_x_from = [(i, y_from) for i in range(x_from)]
-        trajectory_V_from_y_from = [(x_from, j) for j in range(y_from + 1, 8)]
-        trajectory_H_from_x_from = [(i, y_from) for i in range(x_from + 1, 8)]
-        if (x_to, y_to) in trajectory_V_to_y_from: current_trajectory = trajectory_V_to_y_from
-        elif (x_to, y_to) in trajectory_V_from_y_from: current_trajectory = trajectory_V_from_y_from
-        elif (x_to, y_to) in trajectory_H_to_x_from: current_trajectory = trajectory_H_to_x_from
-        elif (x_to, y_to) in trajectory_H_from_x_from: current_trajectory = trajectory_H_from_x_from
+        trajectory_up = [(x_from, y_from - j) for j in range(0, y_from + 1)]
+        trajectory_down = [(x_from, y_from + j) for j in range(0, 8 - y_from)]
+        trajectory_rigth = [(x_from + i, y_from) for i in range(0, 8 - x_from)]
+        trajectory_left = [(x_from - i, y_from) for i in range(0, x_from + 1)]
+        if (x_to, y_to) in trajectory_up: current_trajectory = trajectory_up
+        elif (x_to, y_to) in trajectory_down: current_trajectory = trajectory_down
+        elif (x_to, y_to) in trajectory_rigth: current_trajectory = trajectory_rigth
+        elif (x_to, y_to) in trajectory_left: current_trajectory = trajectory_left
         else:
             return False
+
         for oth_pos in other_piece_positions:
             _, pos_x, pos_y = oth_pos
-            if (pos_x, pos_y) in current_trajectory and current_trajectory.index((pos_x, pos_y)) < current_trajectory.index((x_to, y_to)):
-                print(pos_x, pos_y)
-                return False
+            if (pos_x, pos_y) in current_trajectory:
+                from_pos = current_trajectory.index((x_from, y_from))
+                pos = current_trajectory.index((pos_x, pos_y))
+                to_pos = current_trajectory.index((x_to, y_to))
+                if from_pos < pos < to_pos: 
+                    return False
         return True
     
     @staticmethod
@@ -229,8 +232,11 @@ class ChessTable(tk.Frame):
             return False
         for oth_pos in other_piece_positions:
             _, pos_x, pos_y = oth_pos
-            if (pos_x, pos_y) in current_trajectory and current_trajectory.index((pos_x, pos_y)) < current_trajectory.index((x_to, y_to)):
-                return False
+            if (pos_x, pos_y) in current_trajectory:
+                pos = current_trajectory.index((pos_x, pos_y))
+                to_pos = current_trajectory.index((x_to, y_to))
+                if pos < to_pos: 
+                    return False
         return True
 
     @staticmethod
