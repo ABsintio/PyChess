@@ -62,6 +62,6 @@ class PyChessClient:
         self.t2.join()
         self.t1.join()
 
-client = PyChessClient(sys.argv[1], "192.168.1.184", 9090)
+client = PyChessClient(sys.argv[1], "192.168.1.51", 9090)
 client.connect_to_server()
 client.start_listen_and_receive()

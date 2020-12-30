@@ -180,5 +180,5 @@ class PyChessServer:
 
 
 if __name__ == "__main__":
-    server = PyChessServer("192.168.1.184", 9090, 1000)
+    server = PyChessServer('', 9090, 1000)
     server.accept_connections()
