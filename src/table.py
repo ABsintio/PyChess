@@ -67,7 +67,6 @@ class ChessTable(tk.Frame):
 
     myTurn = False
     hold_piece = ()
-    client = None
 
     def __init__(self, master, client):
         super().__init__(master=master)
@@ -120,7 +119,7 @@ class ChessTable(tk.Frame):
         if color in ['white', 'gray49']: cls.hold_piece = ()
 
     @classmethod
-    def move_piece_callback(cls, event, lables, frames_houses, positions, alg_names):
+    def move_piece_callback(cls, event, lables, frames_houses, positions, alg_names, client):
         if cls.hold_piece != ():
             lbl, frame, piece, piece_pos_name, cln, row = cls.hold_piece
             frame_to_color = 'white' if (cln + row) % 2 == 0 else "grey49"
@@ -153,7 +152,7 @@ class ChessTable(tk.Frame):
                 lables[index_of] = (lbl, piece, c, r)
                 cls.hold_piece = ()
                 positions[piece_pos_name] = cls.tuple2algebric(c, r, piece)
-                cls.client.send_msg(positions)
+                client.send_msg(positions)
                 return
 
     @staticmethod
@@ -341,7 +340,8 @@ class WhiteChessTable(ChessTable):
                             lables=self.labels_frame,
                             frames_houses=self.frame_houses,
                             positions=self.positions,
-                            alg_names=self.alg_name
+                            alg_names=self.alg_name,
+                            client=self.client
                             ))
 
     def create_event_frame(self):
@@ -352,7 +352,8 @@ class WhiteChessTable(ChessTable):
                 lables=self.labels_frame,
                 frames_houses=self.frame_houses,
                 positions=self.positions,
-                alg_names=self.alg_name
+                alg_names=self.alg_name,
+                client=self.client
                 ))
 
 
