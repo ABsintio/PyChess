@@ -8,10 +8,11 @@ class PyChessClient:
     
     SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    def __init__(self, client_name, server_ip, server_port):
+    def __init__(self, client_name, server_ip, server_port, app):
         self.client_name = client_name
         self.server_ip = server_ip
         self.server_port = server_port
+        self.app = app
     
     def connect_to_server(self):
         try:
@@ -41,9 +42,15 @@ class PyChessClient:
                 rcv_msg = self.SOCKET.recv(4096)
                 rcv_msg = pickle.loads(rcv_msg)
                 if not rcv_msg: break
-                print("\n" + rcv_msg)
-                print(">>> ", end="")
-        except Exception:
+                if rcv_msg == "START_WHITE":
+                    self.app.create_white_board()
+                elif rcv_msg == "START_BLACK":
+                    self.app.create_black_board()
+                else:
+                    print("\n" + rcv_msg)
+                    print(">>> ", end="")
+        except Exception as e:
+            print(e)
             pass
         finally:
             if not self.SOCKET._closed: self.SOCKET.close()
@@ -53,8 +60,6 @@ class PyChessClient:
         self.t2 = threading.Thread(target=self.rcv_msg)
         self.t2.start()
         self.t1.start()
-        self.t2.join()
-        self.t1.join()
     
     def start(self):
         self.connect_to_server()
