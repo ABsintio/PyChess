@@ -1,6 +1,6 @@
 import tkinter as tk
-from ui.chesstable.table import *
-from ui.sidebars.chessbar import *
+from table import *
+from chessbar import *
 
 
 class App:
