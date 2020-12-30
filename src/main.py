@@ -3,6 +3,7 @@ from ui.chesstable.table import WhiteChessTable
 from ui.sidebars.chessbar import ChessSideBar
 
 app = tk.Tk()
+app.geometry("1100x800")
 app.title("PyChess")
 #chess_table = WhiteChessTable(app)
 #chess_table.build()

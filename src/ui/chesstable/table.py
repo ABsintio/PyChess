@@ -75,9 +75,9 @@ class ChessTable(tk.Frame):
         self.positions = dict()
         self.labels_frame = []
         self.coords = [y for x in self.PIECES_XY_DICT_WHITE.values() for y in x]
-        self.config(width=800)
-        self.config(height=800)
-        self.pack(fill=tk.BOTH, side=tk.LEFT)
+        #self.config(width=800)
+        #self.config(height=800)
+        self.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
     @staticmethod
     def tuple2algebric(x, y, piece_name):
@@ -285,7 +285,7 @@ class WhiteChessTable(ChessTable):
         index = 0
         for c, r in cartesian_product:
             if c == 7: index += 1
-            w, h = (100, 100) if (c, r) not in self.coords else (94, 94)
+            w, h = (100, 100)
             frame = tk.Frame(
                 master=self,
                 relief=tk.RAISED,
@@ -294,6 +294,7 @@ class WhiteChessTable(ChessTable):
                 bd=1
             )
             frame.grid(column=c,row=r,sticky="nsew")
+            frame.pack_propagate(0)
             self.frame_houses.append(frame)
         
     def place_pieces(self):
@@ -310,8 +311,8 @@ class WhiteChessTable(ChessTable):
                         master=frame,
                         bg=frame.config()['background'][-1],
                         image=img,
-                        width=94,
-                        height=94
+                        width=100,
+                        height=100
                     )
                     piece_label.image = img
                     piece_label.pack(fill=tk.BOTH, expand=False)
