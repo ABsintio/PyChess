@@ -55,6 +55,10 @@ class PyChessClient:
         self.t1.start()
         self.t2.join()
         self.t1.join()
+    
+    def start(self):
+        self.connect_to_server()
+        self.start_listen_and_receive()
 
 #client = PyChessClient("Player", "192.168.1.51", 9090)
 #client.connect_to_server()

@@ -3,6 +3,7 @@ from table import *
 from chessbar import *
 from client import *
 from functools import partial
+import threading
 
 
 class App:
@@ -25,9 +26,9 @@ class App:
     @classmethod
     def callback(cls, event, frame_button, app):
         if cls.client is None:
-            client = PyChessClient("Nome", "192.168.1.51", 9090)
-            client.connect_to_server()
-            client.start_listen_and_receive()
+            client = PyChessClient("Nome1", "192.168.1.51", 9090)
+            t = threading.Thread(target=client.start)
+            t.start()
             cls.client = client
             frame_button.destroy()
             white_board = WhiteChessTable(app)
