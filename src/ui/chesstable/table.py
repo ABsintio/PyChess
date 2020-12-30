@@ -51,18 +51,18 @@ class ChessTable(tk.Frame):
         "white_pawn"   : [(x, 1) for x in range(8)]
     }
     PIECES_IMG_DICT = {
-        "white_king"   : "../pieces/white_king.png",
-        "white_queen"  : "../pieces/white_queen.png",
-        "white_tower"  : "../pieces/white_tower.png",
-        "white_bishop" : "../pieces/white_bishop.png",
-        "white_knight" : "../pieces/white_knight.png",
-        "white_pawn"   : "../pieces/white_pawn.png",
-        "black_king"   : "../pieces/black_king.png",
-        "black_queen"  : "../pieces/black_queen.png",
-        "black_tower"  : "../pieces/black_tower.png",
-        "black_bishop" : "../pieces/black_bishop.png",
-        "black_knight" : "../pieces/black_knight.png",
-        "black_pawn"   : "../pieces/black_pawn.png"
+        "white_king"   : "ui/pieces/white_king.png",
+        "white_queen"  : "ui/pieces/white_queen.png",
+        "white_tower"  : "ui/pieces/white_tower.png",
+        "white_bishop" : "ui/pieces/white_bishop.png",
+        "white_knight" : "ui/pieces/white_knight.png",
+        "white_pawn"   : "ui/pieces/white_pawn.png",
+        "black_king"   : "ui/pieces/black_king.png",
+        "black_queen"  : "ui/pieces/black_queen.png",
+        "black_tower"  : "ui/pieces/black_tower.png",
+        "black_bishop" : "ui/pieces/black_bishop.png",
+        "black_knight" : "ui/pieces/black_knight.png",
+        "black_pawn"   : "ui/pieces/black_pawn.png"
     }
 
     myTurn = False
@@ -74,6 +74,10 @@ class ChessTable(tk.Frame):
         self.frame_houses = []
         self.positions = dict()
         self.labels_frame = []
+        self.coords = [y for x in self.PIECES_XY_DICT_WHITE.values() for y in x]
+        self.config(width=800)
+        self.config(height=800)
+        self.pack(fill=tk.BOTH, side=tk.LEFT)
 
     @staticmethod
     def tuple2algebric(x, y, piece_name):
@@ -269,7 +273,6 @@ class WhiteChessTable(ChessTable):
         super().__init__(master=master)
         self.color_player = "white"
         self.piece_xy_pos = self.PIECES_XY_DICT_WHITE
-        self.pack(fill=tk.BOTH, side=tk.LEFT)
         self.alg_name = {v:k for k, v in self.PIECES_NAMES.items() if self.color_player in k}
 
     def build(self):
@@ -282,11 +285,13 @@ class WhiteChessTable(ChessTable):
         index = 0
         for c, r in cartesian_product:
             if c == 7: index += 1
+            w, h = (100, 100) if (c, r) not in self.coords else (94, 94)
             frame = tk.Frame(
                 master=self,
                 relief=tk.RAISED,
-                width=100, height=100,
+                width=w, height=h,
                 bg="gray49" if (c + r) % 2 != 0 else "white",
+                bd=1
             )
             frame.grid(column=c,row=r,sticky="nsew")
             self.frame_houses.append(frame)
@@ -299,15 +304,17 @@ class WhiteChessTable(ChessTable):
             for piece, img_name in self.PIECES_IMG_DICT.items():
                 if (location_x, location_y) in self.piece_xy_pos[piece]:
                     occ = occurrence_piece[piece]
-                    #frame.update()
                     img_obj = Image.open(img_name)
-                    img = ImageTk.PhotoImage(image=img_obj.resize((90, 90)))
+                    img = ImageTk.PhotoImage(image=img_obj)
                     piece_label = tk.Label(
                         master=frame,
                         bg=frame.config()['background'][-1],
-                        image=img)
+                        image=img,
+                        width=94,
+                        height=94
+                    )
                     piece_label.image = img
-                    piece_label.pack(fill=tk.BOTH, expand=True)
+                    piece_label.pack(fill=tk.BOTH, expand=False)
                     self.positions[f"{piece}_{occ}"] = self.tuple2algebric(
                         location_x, location_y, 
                         piece
@@ -350,13 +357,3 @@ class BlackChessTable(WhiteChessTable):
         super().__init__(master=master)
         self.piece_xy_pos = self.PIECES_XY_DICT_BLACK
         self.color_player = "black"
-
-
-app = tk.Tk()
-app.title("PyChess")
-#chess_table = WhiteChessTable(app)
-#chess_table.build()
-chess_table = BlackChessTable(app)
-chess_table.build()
-app.resizable(False, False)
-app.mainloop()

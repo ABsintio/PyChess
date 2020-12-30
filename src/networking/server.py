@@ -7,6 +7,7 @@ import argparse
 import yaml
 import logging
 import logging.config
+import pickle
 
 
 argument_parser = argparse.ArgumentParser()
@@ -50,21 +51,25 @@ class VirtualRoom(threading.Thread):
         return random_id
 
     def accept_white_sendto_black(self):
-        msg = self.white_socket[0].recv(4096).decode("utf-8")
-        if msg == "": return
+        msg = self.white_socket[0].recv(4096)
+        if msg == b"": return
+        msg = pickle.loads(msg)
         sendto_msg = f"Messaggio dal giocatore bianco {self.white}: {msg}"
         print(sendto_msg)
         if not self.black_socket[0]._closed:
-            self.black_socket[0].send(sendto_msg.encode("utf-8"))
+            sendto_msg = pickle.dumps(sendto_msg)
+            self.black_socket[0].send(sendto_msg)
         return 0
 
     def accept_black_sendto_white(self):
-        msg = self.black_socket[0].recv(4096).decode("utf-8")
-        if msg == "": return
+        msg = self.black_socket[0].recv(4096)
+        if msg == b"": return
+        msg = pickle.loads(msg)
         sendto_msg = f"Messaggio dal giocatore nero {self.black}: {msg}"
         print(sendto_msg)
         if not self.white_socket[0]._closed:
-            self.white_socket[0].send(sendto_msg.encode("utf-8"))
+            sendto_msg = pickle.dumps(sendto_msg)
+            self.white_socket[0].send(sendto_msg)
         return 0
 
     def rcv_clients_msg(self):
@@ -113,15 +118,16 @@ class PyChessServer:
                 off_vr.append(k)
         for vr in off_vr: 
             virtual_r = self.virtual_rooms[vr]
-            virtual_r.white_socket[0].closed()
-            virtual_r.black_socket[0].closed()
+            virtual_r.white_socket[0].close()
+            virtual_r.black_socket[0].close()
             self.virtual_rooms.pop(vr)
 
     def accept_connections(self):
         try:
             while True:
                 client_socket, client_address = self.SOCKET.accept()
-                client_name = client_socket.recv(4096).decode("utf-8")
+                client_name = client_socket.recv(4096)
+                client_name = pickle.loads(client_name, encoding="utf-8")
                 logger.debug(f"[SERVER] Si è connesso un nuovo client ({client_address}, {client_name})")
                 self.connection_pool[client_name] = (client_socket, client_address)
                 self.connected_host += 1
@@ -132,11 +138,12 @@ class PyChessServer:
                     new_virtual_room.start()
                 self.check_virtual_rooms_state()
 
-        except Exception:
+        except Exception as e:
+            print(e)
             self.SOCKET.close() # Chiudo la socket del server
             # disconnetto anche tutte quelle dei client
             for _, client_socket in self.connection_pool.items():
-                client_socket.shutdown()
+                client_socket[0].shutdown(1)
             # Alcuni client possono essere nella stanza virtuale, allora devo scollegare anche quelli
             for _, vr in self.virtual_rooms.items():
                 vr.white_socket[0].close()

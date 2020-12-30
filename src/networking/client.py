@@ -1,6 +1,7 @@
 import socket
 import sys
 import threading
+import pickle
 
 
 class PyChessClient:
@@ -15,7 +16,8 @@ class PyChessClient:
     def connect_to_server(self):
         try:
             self.SOCKET.connect((self.server_ip, self.server_port))
-            self.SOCKET.send(self.client_name.encode("utf-8"))
+            msg = pickle.dumps(self.client_name)
+            self.SOCKET.send(msg)
         except socket.gaierror as e:
             print(e)
     
@@ -24,18 +26,21 @@ class PyChessClient:
             while True:
                 if self.SOCKET._closed: break
                 msg = input(">>> ")
+                msg = pickle.dumps(msg)
                 if msg == "quit" or not msg: break
-                self.SOCKET.send(msg.encode("utf-8"))
-        except Exception:
-            pass
+                self.SOCKET.send(msg)
+        except Exception as e:
+            print(e)
         finally:
             if not self.SOCKET._closed: self.SOCKET.close()
 
     def rcv_msg(self):
         try:
             while True:
+                #print("Ciao")
                 if self.SOCKET._closed: break
-                rcv_msg = self.SOCKET.recv(4096).decode("utf-8")
+                rcv_msg = self.SOCKET.recv(4096)
+                rcv_msg = pickle.loads(rcv_msg)
                 if not rcv_msg: break
                 print("\n" + rcv_msg)
                 print(">>> ", end="")
