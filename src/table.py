@@ -272,8 +272,8 @@ class ChessTable(tk.Frame):
 
 class WhiteChessTable(ChessTable):
 
-    def __init__(self, master):
-        super().__init__(master=master)
+    def __init__(self, master, client):
+        super().__init__(master=master, client=client)
         self.color_player = "white"
         self.piece_xy_pos = self.PIECES_XY_DICT_WHITE
         self.alg_name = {v:k for k, v in self.PIECES_NAMES.items() if self.color_player in k}
@@ -357,7 +357,7 @@ class WhiteChessTable(ChessTable):
 
 
 class BlackChessTable(WhiteChessTable):
-    def __init__(self, master):
-        super().__init__(master=master)
+    def __init__(self, master, client):
+        super().__init__(master=master, client=client)
         self.piece_xy_pos = self.PIECES_XY_DICT_BLACK
         self.color_player = "black"
