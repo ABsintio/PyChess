@@ -38,13 +38,13 @@ class App:
     def create_white_board(self):
         self.frame_button.destroy()
         self.button.destroy()
-        self.board = WhiteChessTable(self.app)
+        self.board = WhiteChessTable(self.app, self.client)
         self.board.build()
     
     def create_black_board(self):
         self.frame_button.destroy()
         self.button.destroy()
-        self.board = BlackChessTable(self.app)
+        self.board = BlackChessTable(self.app, self.client)
         self.board.build()
 
     def destroy_board(self):
