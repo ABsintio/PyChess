@@ -40,6 +40,8 @@ class PyChessClient:
                     self.app.create_white_board()
                 elif rcv_msg == "START_BLACK":
                     self.app.create_black_board()
+                elif isinstance(rcv_msg, dict):
+                    print(True)
                 else:
                     print("\n" + rcv_msg)
                     print(">>> ", end="")
