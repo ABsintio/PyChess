@@ -17,6 +17,12 @@ class App:
         self.app = tk.Tk()
         self.app.title("PyChess")
         self.app.geometry("1100x800")
+        self.create_button()
+
+    def start(self):
+        self.app.mainloop()
+
+    def create_button(self):
         self.frame_button = tk.Frame(self.app)
         self.frame_button.pack(fill=tk.BOTH, expand=True)
         self.button = tk.Button(self.frame_button, text="Cliccami!!")
@@ -28,9 +34,6 @@ class App:
                                                       )
                         )
         self.button.pack(fill=tk.BOTH, expand=True)
-
-    def start(self):
-        self.app.mainloop()
 
     def create_white_board(self):
         self.frame_button.destroy()
@@ -46,11 +49,7 @@ class App:
 
     def destroy_board(self):
         self.board.destroy()
-        self.frame_button = tk.Frame(self.app)
-        self.frame_button.pack(fill=tk.BOTH, expand=True)
-        self.button = tk.Button(self.frame_button, text="Cliccami!!")
-        self.button.bind('<ButtonRelease-1>', partial(App.callback, frame_button=self.frame_button, app=self.app))
-        self.button.pack(fill=tk.BOTH, expand=True)
+        self.create_button()
         self.client = None
 
     @classmethod

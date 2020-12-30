@@ -22,18 +22,12 @@ class PyChessClient:
         except socket.gaierror as e:
             print(e)
     
-    def send_msg(self):
+    def send_msg(self, msg):
         try:
-            while True:
-                if self.SOCKET._closed: break
-                msg = input(">>> ")
-                msg = pickle.dumps(msg)
-                if msg == "quit" or not msg: break
-                self.SOCKET.send(msg)
-        except Exception as e:
-            print(e)
-        finally:
-            if not self.SOCKET._closed: self.SOCKET.close()
+            if not self.SOCKET._closed:
+                self.SOCKET.send(pickle.dumps(msg))
+        except Exception:
+            pass
 
     def rcv_msg(self):
         try:
@@ -55,15 +49,13 @@ class PyChessClient:
         finally:
             if not self.SOCKET._closed: self.SOCKET.close()
 
-    def start_listen_and_receive(self):
-        self.t1 = threading.Thread(target=self.send_msg)
-        self.t2 = threading.Thread(target=self.rcv_msg)
-        self.t2.start()
+    def start_listen(self):
+        self.t1 = threading.Thread(target=self.rcv_msg)
         self.t1.start()
     
     def start(self):
         self.connect_to_server()
-        self.start_listen_and_receive()
+        self.start_listen()
 
 #client = PyChessClient("Player", "192.168.1.51", 9090)
 #client.connect_to_server()

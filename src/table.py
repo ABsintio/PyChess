@@ -67,8 +67,9 @@ class ChessTable(tk.Frame):
 
     myTurn = False
     hold_piece = ()
+    client = None
 
-    def __init__(self, master):
+    def __init__(self, master, client):
         super().__init__(master=master)
         self.master = master
         self.frame_houses = []
@@ -78,6 +79,7 @@ class ChessTable(tk.Frame):
         #self.config(width=800)
         #self.config(height=800)
         self.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+        self.client = client
 
     @staticmethod
     def tuple2algebric(x, y, piece_name):
@@ -151,6 +153,7 @@ class ChessTable(tk.Frame):
                 lables[index_of] = (lbl, piece, c, r)
                 cls.hold_piece = ()
                 positions[piece_pos_name] = cls.tuple2algebric(c, r, piece)
+                cls.client.send_msg(positions)
                 return
 
     @staticmethod
