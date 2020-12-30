@@ -2,6 +2,7 @@ import socket
 import sys
 import threading
 import pickle
+from app import *
 
 
 class PyChessClient:
@@ -37,11 +38,15 @@ class PyChessClient:
     def rcv_msg(self):
         try:
             while True:
-                #print("Ciao")
                 if self.SOCKET._closed: break
                 rcv_msg = self.SOCKET.recv(4096)
                 rcv_msg = pickle.loads(rcv_msg)
                 if not rcv_msg: break
+                print(rcv_msg)
+                if rcv_msg == "START_WHITE":
+                    self.board = App("white")
+                elif rcv_msg == "START_BLACK":
+                    self.board = App("black")
                 print("\n" + rcv_msg)
                 print(">>> ", end="")
         except Exception:
@@ -52,10 +57,10 @@ class PyChessClient:
     def start_listen_and_receive(self):
         self.t1 = threading.Thread(target=self.send_msg)
         self.t2 = threading.Thread(target=self.rcv_msg)
-        self.t1.start()
         self.t2.start()
-        self.t1.join()
+        self.t1.start()
         self.t2.join()
+        self.t1.join()
 
 client = PyChessClient(sys.argv[1], "192.168.1.184", 9090)
 client.connect_to_server()

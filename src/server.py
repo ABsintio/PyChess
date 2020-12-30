@@ -136,6 +136,8 @@ class PyChessServer:
                     logger.debug(f"[SERVER] Nuova stanza virtuale creata:\n{new_virtual_room}")
                     new_virtual_room.daemon = True
                     new_virtual_room.start()
+                    white_socket = new_virtual_room.white_socket[0].send(pickle.dumps("START_WHITE"))
+                    black_socket = new_virtual_room.black_socket[0].send(pickle.dumps("START_BLACK"))
                 self.check_virtual_rooms_state()
 
         except Exception as e:
