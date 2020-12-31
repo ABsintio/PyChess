@@ -57,7 +57,7 @@ class VirtualRoom(threading.Thread):
         sendto_msg = f"Messaggio dal giocatore bianco {self.white}: {msg}"
         print(sendto_msg)
         if not self.black_socket[0]._closed:
-            sendto_msg = pickle.dumps(sendto_msg)
+            sendto_msg = pickle.dumps(msg)
             self.black_socket[0].send(sendto_msg)
         return 0
 
@@ -68,7 +68,7 @@ class VirtualRoom(threading.Thread):
         sendto_msg = f"Messaggio dal giocatore nero {self.black}: {msg}"
         print(sendto_msg)
         if not self.white_socket[0]._closed:
-            sendto_msg = pickle.dumps(sendto_msg)
+            sendto_msg = pickle.dumps(msg)
             self.white_socket[0].send(sendto_msg)
         return 0
 
