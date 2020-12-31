@@ -52,6 +52,9 @@ class App:
         self.create_button()
         self.client = None
 
+    def replace_board_pieces(self, positions):
+        pass
+
     @classmethod
     def callback(cls, event, frame_button, app, pl_name, main_app):
         if cls.client is None:

@@ -37,14 +37,14 @@ class ChessTable(tk.Frame):
         "black_pawn"   : [(x, 1) for x in range(8)]
     }
     PIECES_XY_DICT_BLACK = {
-        "black_king"   : [(4, 7)],
-        "black_queen"  : [(3, 7)],
+        "black_king"   : [(3, 7)],
+        "black_queen"  : [(4, 7)],
         "black_tower"  : [(0, 7), (7, 7)],
         "black_bishop" : [(2, 7), (5, 7)],
         "black_knight" : [(1, 7), (6, 7)],
         "black_pawn"   : [(x, 6) for x in range(8)],
-        "white_king"   : [(4, 0)],
-        "white_queen"  : [(3, 0)],
+        "white_king"   : [(3, 0)],
+        "white_queen"  : [(4, 0)],
         "white_tower"  : [(0, 0), (7, 0)],
         "white_bishop" : [(2, 0), (5, 0)],
         "white_knight" : [(1, 0), (6, 0)],
@@ -355,6 +355,11 @@ class WhiteChessTable(ChessTable):
                 alg_names=self.alg_name,
                 client=self.client
                 ))
+
+    def change_positions(self, new_posiotions):
+        pos_diff = {k : (self.positions[k], new_posiotions[k]) for k in self.positions if self.positions[k] != new_posiotions[k]}
+
+
 
 
 class BlackChessTable(WhiteChessTable):
