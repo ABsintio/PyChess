@@ -356,8 +356,13 @@ class WhiteChessTable(ChessTable):
                 client=self.client
                 ))
 
-    def change_positions(self, new_posiotions):
-        pos_diff = {k : (self.positions[k], new_posiotions[k]) for k in self.positions if self.positions[k] != new_posiotions[k]}
+    def change_positions(self, new_positions):
+        pov_position = {k : [] for k in self.PIECES_NAMES if not self.color_player in k}
+        for k in pov_position:
+            for k1 in new_positions:
+                if k in k1:
+                    pov_position[k].append(k1)
+        print(pov_position)
 
 
 
