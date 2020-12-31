@@ -41,7 +41,7 @@ class PyChessClient:
                 elif rcv_msg == "START_BLACK":
                     self.app.create_black_board()
                 elif isinstance(rcv_msg, dict):
-                    pass
+                    self.app.replace_board_pieces(rcv_msg)
                 else:
                     print("\n" + rcv_msg)
                     print(">>> ", end="")

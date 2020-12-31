@@ -53,7 +53,7 @@ class App:
         self.client = None
 
     def replace_board_pieces(self, positions):
-        pass
+        self.board.change_positions(positions)
 
     @classmethod
     def callback(cls, event, frame_button, app, pl_name, main_app):
